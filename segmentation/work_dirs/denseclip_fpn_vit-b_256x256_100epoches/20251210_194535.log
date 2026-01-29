@@ -1,0 +1,257 @@
+2025-12-10 19:45:35,432 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: win32
+Python: 3.7.12 | packaged by conda-forge | (default, Oct 26 2021, 05:35:01) [MSC v.1916 64 bit (AMD64)]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 3090
+CUDA_HOME: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+NVCC: Not Available
+GCC: n/a
+PyTorch: 1.9.0
+PyTorch compiling details: PyTorch built with:
+  - C++ Version: 199711
+  - MSVC 192829337
+  - Intel(R) Math Kernel Library Version 2020.0.2 Product Build 20200624 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.1.2 (Git Hash 98be7e8afa711dc9b66c8ff3504129cb82013cdb)
+  - OpenMP 2019
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.0.5
+  - Magma 2.5.4
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=C:/cb/pytorch_1000000000000/work/tmp_bin/sccache-cl.exe, CXX_FLAGS=/DWIN32 /D_WINDOWS /GR /EHsc /w /bigobj -DUSE_PTHREADPOOL -openmp:experimental -IC:/cb/pytorch_1000000000000/work/mkl/include -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOCUPTI -DUSE_FBGEMM -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.9.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=OFF, USE_NNPACK=OFF, USE_OPENMP=ON, 
+
+TorchVision: 0.10.0
+OpenCV: 4.10.0
+MMCV: 1.3.17
+MMCV Compiler: MSVC 192930157
+MMCV CUDA Compiler: 12.1
+MMSegmentation: 0.19.0+
+------------------------------------------------------------
+
+2025-12-10 19:45:35,432 - mmseg - INFO - Distributed training: False
+2025-12-10 19:45:35,592 - mmseg - INFO - Config:
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+model = dict(
+    type='DenseCLIP',
+    pretrained='pretrained/ViT-B-16.pt',
+    context_length=69,
+    backbone=dict(
+        type='CLIPVisionTransformer',
+        layers=12,
+        style='pytorch',
+        patch_size=16,
+        width=768,
+        output_dim=512,
+        get_embeddings=True,
+        drop_path_rate=0.1,
+        input_resolution=256),
+    text_encoder=dict(
+        type='CLIPTextContextEncoder',
+        context_length=77,
+        style='pytorch',
+        embed_dim=512,
+        transformer_width=512,
+        transformer_heads=8,
+        transformer_layers=12),
+    context_decoder=dict(
+        type='ContextDecoder',
+        context_length=16,
+        transformer_width=256,
+        transformer_heads=4,
+        transformer_layers=3,
+        visual_dim=512,
+        dropout=0.1,
+        outdim=512,
+        style='pytorch'),
+    neck=dict(
+        type='FPN',
+        in_channels=[768, 768, 775, 768],
+        out_channels=256,
+        num_outs=4),
+    decode_head=dict(
+        type='FPNHead',
+        in_channels=[256, 256, 256, 256],
+        in_index=[0, 1, 2, 3],
+        feature_strides=[4, 8, 16, 32],
+        channels=256,
+        dropout_ratio=0.1,
+        num_classes=7,
+        norm_cfg=dict(type='SyncBN', requires_grad=True),
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+    identity_head=dict(
+        type='IdentityHead',
+        in_channels=1,
+        channels=1,
+        num_classes=1,
+        dropout_ratio=0.1,
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
+    train_cfg=dict(),
+    test_cfg=dict(mode='slide', crop_size=(512, 512), stride=(341, 341)),
+    text_head=False,
+    text_dim=512,
+    score_concat_index=2)
+dataset_type = 'SWJTUDataset'
+data_root = 'data/SWJTU'
+IMG_MEAN = [98.86502, 97.23819, 95.2317, 40.737988]
+IMG_VAR = [27.610954, 24.760305, 23.057755, 27.252533]
+img_norm_cfg = dict(
+    mean=[98.86502, 97.23819, 95.2317, 40.737988],
+    std=[27.610954, 24.760305, 23.057755, 27.252533],
+    to_rgb=False)
+crop_size = (256, 256)
+train_pipeline = [
+    dict(
+        type='LoadImageFromFile',
+        color_type='unchanged',
+        imdecode_backend='tifffile'),
+    dict(type='LoadAnnotations'),
+    dict(type='Resize', img_scale=(256, 256), keep_ratio=True),
+    dict(type='RandomCrop', crop_size=(256, 256), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(
+        type='Normalize',
+        mean=[98.86502, 97.23819, 95.2317, 40.737988],
+        std=[27.610954, 24.760305, 23.057755, 27.252533],
+        to_rgb=False),
+    dict(type='Pad', size=(256, 256), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(
+        type='LoadImageFromFile',
+        color_type='unchanged',
+        imdecode_backend='tifffile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(256, 256),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[98.86502, 97.23819, 95.2317, 40.737988],
+                std=[27.610954, 24.760305, 23.057755, 27.252533],
+                to_rgb=False),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=10,
+    workers_per_gpu=4,
+    train=dict(
+        type='SWJTUDataset',
+        data_root='data/SWJTU',
+        img_dir='800挑选\img_optical_sar800',
+        ann_dir='800挑选/ann800',
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                color_type='unchanged',
+                imdecode_backend='tifffile'),
+            dict(type='LoadAnnotations'),
+            dict(type='Resize', img_scale=(256, 256), keep_ratio=True),
+            dict(type='RandomCrop', crop_size=(256, 256), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(
+                type='Normalize',
+                mean=[98.86502, 97.23819, 95.2317, 40.737988],
+                std=[27.610954, 24.760305, 23.057755, 27.252533],
+                to_rgb=False),
+            dict(type='Pad', size=(256, 256), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='SWJTUDataset',
+        data_root='data/SWJTU',
+        img_dir='800挑选\img_optical_sar1431',
+        ann_dir='800挑选/ann1431',
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                color_type='unchanged',
+                imdecode_backend='tifffile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(256, 256),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[98.86502, 97.23819, 95.2317, 40.737988],
+                        std=[27.610954, 24.760305, 23.057755, 27.252533],
+                        to_rgb=False),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='SWJTUDataset',
+        data_root='data/SWJTU',
+        img_dir='800挑选\img_optical_sar1431',
+        ann_dir='800挑选/ann1431',
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                color_type='unchanged',
+                imdecode_backend='tifffile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(256, 256),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[98.86502, 97.23819, 95.2317, 40.737988],
+                        std=[27.610954, 24.760305, 23.057755, 27.252533],
+                        to_rgb=False),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+cudnn_benchmark = True
+find_unused_parameters = True
+optimizer = dict(
+    type='AdamW',
+    lr=0.0001,
+    weight_decay=0.0001,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            backbone=dict(lr_mult=0.1),
+            text_encoder=dict(lr_mult=0.0),
+            norm=dict(decay_mult=0.0))))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=1500,
+    warmup_ratio=1e-06)
+runner = dict(type='EpochBasedRunner', max_epochs=500)
+checkpoint_config = dict(by_epoch=True, interval=20)
+evaluation = dict(
+    interval=20, metric=['mIoU', 'mDice', 'mFscore'], save_best='mIoU')
+work_dir = './work_dirs\denseclip_fpn_vit-b_256x256_100epoches'
+gpu_ids = range(0, 1)
+
